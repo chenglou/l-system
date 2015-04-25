@@ -5,14 +5,12 @@ function toRad(deg) {
 }
 
 function genString(axiom, depth, rules) {
-  var str = axiom;
+  let str = axiom;
   for (var i = 0; i < depth; i++) {
     if (str.length > 10000) {
       return null;
     }
-    str = str.split('').map(function(c) {
-      return rules[c] ? rules[c] : c;
-    }).join('');
+    str = str.split('').map(c => rules[c] || c).join('');
   }
 
   return str;
@@ -25,7 +23,7 @@ function parse(startAngle, angle, len, str) {
   var posStack = [currPos];
   var ret = [];
 
-  str.split('').forEach(function(c) {
+  str.split('').forEach(c => {
     if (c === '[') {
       posStack.push(currPos);
       angleStack.push(currAngle);

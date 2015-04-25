@@ -9,17 +9,14 @@ function clone(o) {
 }
 
 function encodeRulesText(rules) {
-  return Object.keys(rules).map(function(from) {
-    var to = rules[from];
-    return from + ': ' + to + ';';
-  }).join('\n');
+  return Object.keys(rules).map(from => `${from}: ${rules[from]};`).join('\n');
 }
 
 function decodeRulesText(text) {
-  var ret = {};
-  var rules = text.replace(/\s/g, '').split(';');
+  let ret = {};
+  let rules = text.replace(/\s/g, '').split(';');
   rules.splice(-1);
-  rules.forEach(function(r) {
+  rules.forEach(r => {
     r = r.split(':');
     ret[r[0]] = r[1];
   });
@@ -28,39 +25,32 @@ function decodeRulesText(text) {
 }
 
 var Board = React.createClass({
-  getInitialState: function() {
+  getInitialState() {
     return {
       clickedPos: null,
       pos: [400, 500],
     };
   },
 
-  draw: function() {
-    var can = this.refs.can.getDOMNode();
-    var ctx = can.getContext('2d');
+  draw() {
+    let can = this.refs.can.getDOMNode();
+    let ctx = can.getContext('2d');
     ctx.clearRect(0, 0, 9999, 9999);
     ctx.strokeStyle = 'rgb(76, 94, 61)';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
 
-    var pos = this.state.pos;
-    this.props.coords.forEach(function(pair) {
-      var currPos = pair[0];
-      var destPos = pair[1];
+    let [posX, posY] = this.state.pos;
+    this.props.coords.forEach(([[currX, currY], [destX, destY]]) => {
       ctx.beginPath();
-      ctx.moveTo(currPos[0] + pos[0], currPos[1] + pos[1]);
-      ctx.lineTo(destPos[0] + pos[0], destPos[1] + pos[1]);
+      ctx.moveTo(currX + posX, currY + posY);
+      ctx.lineTo(destX + posX, destY + posY);
       ctx.stroke();
-    }, this);
+    });
   },
 
-  componentDidMount: function() {
-    this.draw();
-  },
-
-  componentDidUpdate: function() {
-    this.draw();
-  },
+  componentDidMount: () => this.draw(),
+  componentDidUpdate: () => this.draw(),
 
   handleMouseDown: function(e) {
     this.setState({
@@ -89,7 +79,7 @@ var Board = React.createClass({
 
   render: function() {
     return (
-      <canvas
+      <canvas {...this.props}
         onMouseDown={this.handleMouseDown}
         onMouseUp={this.handleMouseUp}
         onMouseMove={this.handleMouseMove}
@@ -111,8 +101,9 @@ var App = React.createClass({
   },
 
   handleChangeState: function(key, e) {
-    this.state[key] = e.target.value;
-    this.setState(this.state);
+    this.setState({
+      [key]: e.target.value,
+    });
   },
 
   handleButtonClick: function(value) {
