@@ -21,7 +21,7 @@ function genString(axiom, depth, rules) {
 function parse(startAngle, angle, len, str) {
   var currAngle = startAngle;
   var angleStack = [currAngle];
-  var currPos = [400, 500];
+  var currPos = [0, 0];
   var posStack = [currPos];
   var ret = [];
 

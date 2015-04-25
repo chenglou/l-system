@@ -24,6 +24,13 @@ function decodeRulesText(text) {
 }
 
 var Board = React.createClass({
+  getInitialState: function() {
+    return {
+      clickedPos: null,
+      pos: [400, 500],
+    };
+  },
+
   draw: function() {
     var can = this.refs.can.getDOMNode();
     var ctx = can.getContext('2d');
@@ -32,14 +39,15 @@ var Board = React.createClass({
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
 
+    var pos = this.state.pos;
     this.props.coords.forEach(function(pair) {
       var currPos = pair[0];
       var destPos = pair[1];
       ctx.beginPath();
-      ctx.moveTo(currPos[0], currPos[1]);
-      ctx.lineTo(destPos[0], destPos[1]);
+      ctx.moveTo(currPos[0] + pos[0], currPos[1] + pos[1]);
+      ctx.lineTo(destPos[0] + pos[0], destPos[1] + pos[1]);
       ctx.stroke();
-    });
+    }, this);
   },
 
   componentDidMount: function() {
@@ -50,9 +58,41 @@ var Board = React.createClass({
     this.draw();
   },
 
+  handleMouseDown: function(e) {
+    this.setState({
+      clickedPos: [e.pageX, e.pageY],
+    });
+  },
+
+  handleMouseUp: function() {
+    this.setState({
+      clickedPos: null,
+    });
+  },
+
+  handleMouseMove: function(e) {
+    var s = this.state;
+    if (!s.clickedPos) {
+      return;
+    }
+    var dx = e.pageX - s.clickedPos[0];
+    var dy = e.pageY - s.clickedPos[1];
+    this.setState({
+      pos: [s.pos[0] + dx, s.pos[1] + dy],
+      clickedPos: [e.pageX, e.pageY],
+    });
+  },
+
   render: function() {
     return (
-      <canvas ref="can" width={999} height={999}></canvas>
+      <canvas
+        onMouseDown={this.handleMouseDown}
+        onMouseUp={this.handleMouseUp}
+        onMouseMove={this.handleMouseMove}
+        ref="can"
+        width={999}
+        height={999}>
+      </canvas>
     );
   }
 });
@@ -103,16 +143,17 @@ var App = React.createClass({
     }
 
     return (
-      <div>
-        <div style={{position: 'absolute'}}>
+      <div style={{WebkitUserSelect: 'none'}}>
+        <div style={{position: 'absolute', backgroundColor: 'rgb(228, 229, 212)', padding: 10}}>
           <div>Preset</div>
           <button onClick={this.handleButtonClick.bind(null, 'pythagoras')}>Pythagoras</button>
-          <button onClick={this.handleButtonClick.bind(null, 'koch')}>Koch</button>
           <button onClick={this.handleButtonClick.bind(null, 'sierpinski')}>Sierpinski</button>
-          <button onClick={this.handleButtonClick.bind(null, 'sierpinski2')}>Sierpinski2</button>
-          <button onClick={this.handleButtonClick.bind(null, 'dragon')}>Dragon</button>
-          <button onClick={this.handleButtonClick.bind(null, 'plant')}>Plant</button>
           <button onClick={this.handleButtonClick.bind(null, 'seaweed')}>Seaweed</button>
+          <div></div>
+          <button onClick={this.handleButtonClick.bind(null, 'dragon')}>Dragon</button>
+          <button onClick={this.handleButtonClick.bind(null, 'koch')}>Koch</button>
+          <button onClick={this.handleButtonClick.bind(null, 'sierpinski2')}>Sierpinski2</button>
+          <button onClick={this.handleButtonClick.bind(null, 'plant')}>Plant</button>
           <div>Iteration</div>
           <input
             type="range"
