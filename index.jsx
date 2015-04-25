@@ -1,5 +1,9 @@
 'use strict';
 
+let {genString, parse} = require('./alg');
+let React = require('react');
+let presets = require('./presets');
+
 function clone(o) {
   return JSON.parse(JSON.stringify(o));
 }
@@ -210,4 +214,4 @@ var App = React.createClass({
   }
 });
 
-React.render(<App></App>, document.body);
+React.render(<App></App>, document.getElementById('container'));

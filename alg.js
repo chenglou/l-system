@@ -51,3 +51,5 @@ function parse(startAngle, angle, len, str) {
 
   return ret;
 }
+
+module.exports = {genString, parse};

@@ -70,3 +70,5 @@ var presets = {
     },
   },
 };
+
+module.exports = presets;
