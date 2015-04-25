@@ -17,7 +17,7 @@ function decodeRulesText(text) {
   return ret;
 }
 
-var Board = React.createClass({
+let Board = React.createClass({
   draw: function() {
     let can = this.refs.can.getDOMNode();
     let ctx = can.getContext('2d');
@@ -43,11 +43,12 @@ var Board = React.createClass({
   },
 
   render: function() {
-    return <canvas {...this.props} ref="can"width={999} height={999} />;
+    let {coords, ...props} = this.props;
+    return <canvas {...props} ref="can" width={999} height={999} />;
   }
 });
 
-var App = React.createClass({
+let App = React.createClass({
   getInitialState: function() {
     return {
       depth: 4,
@@ -87,18 +88,17 @@ var App = React.createClass({
   },
 
   render: function() {
-    var s = this.state;
-    var settings = s.settings;
-    var maybeBoard;
-    var str = genString(settings.axiom, s.depth, decodeRulesText(s.rulesText));
+    let {depth, settings, rulesText, pos: [posX, posY]} = this.state;
+    let maybeBoard;
+    let str = genString(settings.axiom, depth, decodeRulesText(rulesText));
     if (str == null) {
       maybeBoard = <div style={{float: 'right'}}>Too many iterations for this pattern.</div>;
     } else {
       let coords =
         parse(settings.startAngle, settings.angle, settings.len, str)
         .map(([[x1, y1], [x2, y2]]) => [
-          [x1 + s.pos[0], y1 + s.pos[1]],
-          [x2 + s.pos[0], y2 + s.pos[1]],
+          [x1 + posX, y1 + posY],
+          [x2 + posX, y2 + posY],
         ]);
       maybeBoard =
         <Board
@@ -123,12 +123,12 @@ var App = React.createClass({
           <div>Iteration</div>
           <input
             type="range"
-            value={s.depth}
+            value={depth}
             onChange={e => this.setState({depth: e.target.value})}
             min={0}
             max={12}
             />
-          {s.depth}
+          {depth}
           <div>Angle</div>
           <input
             type="range"
@@ -166,7 +166,7 @@ var App = React.createClass({
           <div>Rules (G-Z ignored)</div>
           <textarea
             rows={5}
-            value={s.rulesText}
+            value={rulesText}
             onChange={e => this.setState({rulesText: e.target.value})}
             />
         </div>
