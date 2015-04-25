@@ -4,35 +4,21 @@ let {genString, parse} = require('./alg');
 let React = require('react');
 let presets = require('./presets');
 
-function clone(o) {
-  return JSON.parse(JSON.stringify(o));
-}
-
 function encodeRulesText(rules) {
   return Object.keys(rules).map(from => `${from}: ${rules[from]};`).join('\n');
 }
 
 function decodeRulesText(text) {
   let ret = {};
-  let rules = text.replace(/\s/g, '').split(';');
+  let rules = text.replace(/\s/g, '').split(';').map(r => r.split(':'));
   rules.splice(-1);
-  rules.forEach(r => {
-    r = r.split(':');
-    ret[r[0]] = r[1];
-  });
+  rules.forEach(r => ret[r[0]] = r[1]);
 
   return ret;
 }
 
 var Board = React.createClass({
-  getInitialState() {
-    return {
-      clickedPos: null,
-      pos: [400, 500],
-    };
-  },
-
-  draw() {
+  draw: function() {
     let can = this.refs.can.getDOMNode();
     let ctx = can.getContext('2d');
     ctx.clearRect(0, 0, 9999, 9999);
@@ -40,54 +26,24 @@ var Board = React.createClass({
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
 
-    let [posX, posY] = this.state.pos;
     this.props.coords.forEach(([[currX, currY], [destX, destY]]) => {
       ctx.beginPath();
-      ctx.moveTo(currX + posX, currY + posY);
-      ctx.lineTo(destX + posX, destY + posY);
+      ctx.moveTo(currX, currY);
+      ctx.lineTo(destX, destY);
       ctx.stroke();
     });
   },
 
-  componentDidMount: () => this.draw(),
-  componentDidUpdate: () => this.draw(),
-
-  handleMouseDown: function(e) {
-    this.setState({
-      clickedPos: [e.pageX, e.pageY],
-    });
+  componentDidMount: function() {
+    this.draw();
   },
 
-  handleMouseUp: function() {
-    this.setState({
-      clickedPos: null,
-    });
-  },
-
-  handleMouseMove: function(e) {
-    var s = this.state;
-    if (!s.clickedPos) {
-      return;
-    }
-    var dx = e.pageX - s.clickedPos[0];
-    var dy = e.pageY - s.clickedPos[1];
-    this.setState({
-      pos: [s.pos[0] + dx, s.pos[1] + dy],
-      clickedPos: [e.pageX, e.pageY],
-    });
+  componentDidUpdate: function() {
+    this.draw();
   },
 
   render: function() {
-    return (
-      <canvas {...this.props}
-        onMouseDown={this.handleMouseDown}
-        onMouseUp={this.handleMouseUp}
-        onMouseMove={this.handleMouseMove}
-        ref="can"
-        width={999}
-        height={999}>
-      </canvas>
-    );
+    return <canvas {...this.props} ref="can"width={999} height={999} />;
   }
 });
 
@@ -95,34 +51,39 @@ var App = React.createClass({
   getInitialState: function() {
     return {
       depth: 4,
-      settings: clone(presets.pythagoras),
+      settings: presets.pythagoras,
       rulesText: encodeRulesText(presets.pythagoras.rules),
+
+      clickedPos: null,
+      pos: [400, 500],
     };
   },
 
-  handleChangeState: function(key, e) {
-    this.setState({
-      [key]: e.target.value,
-    });
-  },
-
   handleButtonClick: function(value) {
-    var settings = clone(presets[value]);
     this.setState({
-      settings: settings,
-      rulesText: encodeRulesText(settings.rules),
+      settings: presets[value],
+      rulesText: encodeRulesText(presets[value].rules),
     });
   },
 
-  handleSettings: function(category, e) {
-    var value;
-    if (category === 'axiom') {
-      value = e.target.value;
-    } else {
-      value = parseInt(e.target.value);
+  handleSettings: function(category, {target: {value}}) {
+    this.setState({
+      settings: {
+        ...this.state.settings,
+        [category]: category === 'axiom' ? value : parseInt(value),
+      },
+    });
+  },
+
+  handleMouseMove: function(e) {
+    if (!this.state.clickedPos) {
+      return;
     }
-    this.state.settings[category] = value;
-    this.setState(this.state);
+    let {clickedPos: [cx, cy], pos: [x, y]} = this.state;
+    this.setState({
+      pos: [x + (e.pageX - cx), y + (e.pageY - cy)],
+      clickedPos: [e.pageX, e.pageY],
+    });
   },
 
   render: function() {
@@ -133,8 +94,18 @@ var App = React.createClass({
     if (str == null) {
       maybeBoard = <div style={{float: 'right'}}>Too many iterations for this pattern.</div>;
     } else {
-      var coords = parse(settings.startAngle, settings.angle, settings.len, str);
-      maybeBoard = <Board coords={coords}/>;
+      let coords =
+        parse(settings.startAngle, settings.angle, settings.len, str)
+        .map(([[x1, y1], [x2, y2]]) => [
+          [x1 + s.pos[0], y1 + s.pos[1]],
+          [x2 + s.pos[0], y2 + s.pos[1]],
+        ]);
+      maybeBoard =
+        <Board
+          coords={coords}
+          onMouseDown={e => this.setState({clickedPos: [e.pageX, e.pageY]})}
+          onMouseUp={() => this.setState({clickedPos: null})}
+          onMouseMove={this.handleMouseMove} />;
     }
 
     return (
@@ -153,7 +124,7 @@ var App = React.createClass({
           <input
             type="range"
             value={s.depth}
-            onChange={this.handleChangeState.bind(null, 'depth')}
+            onChange={e => this.setState({depth: e.target.value})}
             min={0}
             max={12}
             />
@@ -196,7 +167,7 @@ var App = React.createClass({
           <textarea
             rows={5}
             value={s.rulesText}
-            onChange={this.handleChangeState.bind(null, 'rulesText')}
+            onChange={e => this.setState({rulesText: e.target.value})}
             />
         </div>
         {maybeBoard}
@@ -205,4 +176,4 @@ var App = React.createClass({
   }
 });
 
-React.render(<App></App>, document.getElementById('container'));
+React.render(<App />, document.getElementById('container'));
