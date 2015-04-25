@@ -1,12 +1,10 @@
 'use strict';
 
-function toRad(deg) {
-  return deg / 180 * Math.PI;
-}
+let toRad = deg => deg / 180 * Math.PI;
 
 function genString(axiom, depth, rules) {
   let str = axiom;
-  for (var i = 0; i < depth; i++) {
+  for (let i = 0; i < depth; i++) {
     if (str.length > 10000) {
       return null;
     }
@@ -17,11 +15,11 @@ function genString(axiom, depth, rules) {
 }
 
 function parse(startAngle, angle, len, str) {
-  var currAngle = startAngle;
-  var angleStack = [currAngle];
-  var currPos = [0, 0];
-  var posStack = [currPos];
-  var ret = [];
+  let currAngle = startAngle;
+  let angleStack = [currAngle];
+  let currPos = [0, 0];
+  let posStack = [currPos];
+  let ret = [];
 
   str.split('').forEach(c => {
     if (c === '[') {
@@ -36,12 +34,9 @@ function parse(startAngle, angle, len, str) {
       currAngle += angle;
     } else if (c >= 'A' && c <= 'F') {
       // every other letter is ignored
-      var x = Math.cos(toRad(currAngle)) * len;
-      var y = Math.sin(toRad(currAngle)) * len;
-      var destPos = [
-        currPos[0] + x,
-        currPos[1] - y,
-      ];
+      let x = Math.cos(toRad(currAngle)) * len;
+      let y = Math.sin(toRad(currAngle)) * len;
+      let destPos = [currPos[0] + x, currPos[1] - y];
       ret.push([currPos, destPos]);
       currPos = destPos;
     }
